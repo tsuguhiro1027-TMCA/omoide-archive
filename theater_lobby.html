@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思い出の映画館 | Grand Lobby</title>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --black: #050505;
+            --gray: #151515;
+            --white: #ffffff;
+            --on-air-red: #ff0000;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--gold);
+            font-family: 'Shippori Mincho', 'serif', "Times New Roman", "游明朝", serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .lobby-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px 0;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gold);
+            display: inline-block;
+            padding: 0 60px 10px 60px;
+        }
+
+        h1 { font-size: 3.5rem; letter-spacing: 0.2em; margin: 0; text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin: 20px 0 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.4em;
+        }
+        .section-title::before, .section-title::after { content: ""; width: 100px; height: 1px; background: var(--gold); margin: 0 30px; }
+
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            padding: 40px 0;
+            background-color: var(--black);
+        }
+
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+
+        .slider-track {
+            display: flex;
+            gap: 60px;
+            padding: 40px 0;
+            will-change: transform;
+        }
+
+        .poster-card {
+            width: 380px;
+            flex-shrink: 0;
+            background: var(--gray);
+            border: 2px solid var(--gold);
+            padding: 15px;
+            transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1), box-shadow 0.5s;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        @keyframes blink-red {
+            0%, 100% { opacity: 1; box-shadow: 0 0 15px var(--on-air-red); }
+            50% { opacity: 0.6; box-shadow: 0 0 5px var(--on-air-red); }
+        }
+
+        .now-showing-badge {
+            position: absolute;
+            top: -15px; left: 50%; transform: translateX(-50%);
+            background: var(--on-air-red); color: white; font-size: 0.75rem;
+            font-weight: bold; padding: 4px 15px; border-radius: 3px; z-index: 10;
+            border: 1px solid rgba(255,255,255,0.4); animation: blink-red 2s infinite;
+            letter-spacing: 0.1em; white-space: nowrap;
+        }
+
+        .poster-card:hover {
+            transform: scale(1.08) translateY(-10px);
+            box-shadow: 0 20px 50px rgba(212, 175, 55, 0.3);
+            z-index: 100;
+        }
+
+        .poster-image { width: 100%; aspect-ratio: 3 / 4; background: #000; overflow: hidden; }
+        .poster-image img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s ease; }
+
+        .poster-title {
+            margin-top: 20px; color: var(--white); font-weight: bold;
+            font-size: 1.2rem; letter-spacing: 0.05em;
+        }
+
+        .nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(10, 10, 10, 0.9); border: 1px solid var(--gold);
+            color: var(--gold); width: 60px; height: 60px; border-radius: 50%;
+            cursor: pointer; font-size: 24px; z-index: 100; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-btn:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 15px var(--gold); }
+        .prev-btn { left: 40px; } .next-btn { right: 40px; }
+
+        .menu-btn {
+            background: transparent; border: 1px solid var(--gold); color: var(--gold);
+            padding: 15px 35px; cursor: pointer; transition: 0.3s;
+            margin-top: 40px; font-size: 0.9rem; letter-spacing: 0.2em;
+        }
+        .menu-btn:hover { background: var(--gold); color: var(--black); }
+
+        .loading {
+            color: var(--gold);
+            font-size: 1.2rem;
+            letter-spacing: 0.2em;
+            opacity: 0.7;
+            padding: 60px 0;
+        }
+
+        @media screen and (max-width: 768px) {
+            header { padding: 0 20px 10px 20px; }
+            h1 { font-size: 2.2rem; }
+            .section-title { font-size: 1.2rem; margin: 15px 0 20px 0; }
+            .section-title::before, .section-title::after { width: 40px; margin: 0 15px; }
+            .slider-wrapper { padding: 20px 0; }
+            .slider-track { gap: 20px; padding: 20px 0; }
+            .poster-card { width: 240px; padding: 10px; }
+            .poster-title { font-size: 1rem; margin-top: 15px; }
+            .nav-btn { width: 45px; height: 45px; font-size: 18px; }
+            .prev-btn { left: 10px; }
+            .next-btn { right: 10px; }
+            .menu-btn { padding: 12px 25px; font-size: 0.85rem; margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="lobby-container">
+        <header>
+            <h1>思い出の映画館</h1>
+            <p style="color:white; opacity:0.8; letter-spacing: 0.15em;">Grand Lobby — Memory Archive</p>
+        </header>
+
+        <div class="section-title">NOW SHOWING</div>
+
+        <div class="slider-wrapper">
+            <button class="nav-btn prev-btn" id="prevBtn">❮</button>
+            <div class="slider-container">
+                <div class="slider-track" id="sliderTrack">
+                    <div class="loading">上映作品を読み込み中...</div>
+                </div>
+            </div>
+            <button class="nav-btn next-btn" id="nextBtn">❯</button>
+        </div>
+
+        <div>
+            <button class="menu-btn" onclick="location.href='index.html'">🔙 街角へ戻る</button>
+        </div>
+    </div>
+
+    <script>
+        // ★GASのURL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyjhEdmWnWi5QkS-KKY-g-oH6OcktgnFBItjIuIejsJFkvRVjEmpxRm-ui2q5lLz6cPMw/exec';
+
+        // ログインチェック
+        const userId = sessionStorage.getItem('user_id');
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        const track = document.getElementById('sliderTrack');
+        let currentOffset = 0;
+        let speed = 0.7;
+        let isManual = false;
+        let animationStarted = false;
+
+        // Google DriveのファイルIDから表示用URLに変換
+        function getDriveImageUrl(fileId) {
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+        }
+
+        // GASからコンテンツ一覧を取得してスライダーを構築
+        async function loadMovies() {
+            try {
+                const res = await fetch(`${GAS_URL}?action=getContents&user_id=${encodeURIComponent(userId)}`);
+                const data = await res.json();
+
+                if (data.status === 'ok' && data.contents.length > 0) {
+                    // MOVIEタイプのみ抽出
+                    const movies = data.contents.filter(c => c.type === 'MOVIE');
+
+                    if (movies.length === 0) {
+                        track.innerHTML = '<div class="loading">上映中の作品はありません</div>';
+                        return;
+                    }
+
+                    track.innerHTML = '';
+
+                    // ポスターカードを生成
+                    movies.forEach(movie => {
+                        const thumbnailUrl = movie.thumbnail_id
+                            ? getDriveImageUrl(movie.thumbnail_id)
+                            : 'https://via.placeholder.com/380x500/111/d4af37?text=No+Image';
+
+                        const card = document.createElement('div');
+                        card.className = 'poster-card';
+                        card.onclick = () => openTheater(movie.file_id, movie.title);
+                        card.innerHTML = `
+                            <div class="now-showing-badge">NOW SHOWING</div>
+                            <div class="poster-image">
+                                <img src="${thumbnailUrl}"
+                                     onerror="this.src='https://via.placeholder.com/380x500/111/d4af37?text=No+Image'">
+                            </div>
+                            <div class="poster-title">${movie.title}</div>
+                        `;
+                        track.appendChild(card);
+                    });
+
+                    // カードが少ない場合はループ用にクローンを追加
+                    const originalCards = Array.from(track.children);
+                    for (let i = 0; i < 3; i++) {
+                        originalCards.forEach(card => {
+                            track.appendChild(card.cloneNode(true));
+                        });
+                    }
+
+                    // スライダー初期化
+                    initSlider();
+
+                } else {
+                    track.innerHTML = '<div class="loading">上映中の作品はありません</div>';
+                }
+            } catch (err) {
+                track.innerHTML = '<div class="loading">読み込みに失敗しました</div>';
+            }
+        }
+
+        function getCardFullWidth() {
+            if (track.children.length > 1) {
+                return track.children[1].getBoundingClientRect().left - track.children[0].getBoundingClientRect().left;
+            }
+            return 440;
+        }
+
+        function initSlider() {
+            const originalCount = track.children.length / 4; // クローン3セット分
+            let cardFullWidth = getCardFullWidth();
+            let totalOriginalWidth = originalCount * cardFullWidth;
+            currentOffset = -totalOriginalWidth;
+            track.style.transform = `translateX(${currentOffset}px)`;
+
+            window.addEventListener('resize', () => {
+                cardFullWidth = getCardFullWidth();
+                totalOriginalWidth = originalCount * cardFullWidth;
+            });
+
+            if (!animationStarted) {
+                animationStarted = true;
+                animate(totalOriginalWidth);
+            }
+
+            document.getElementById('prevBtn').onclick = () => manualMove(-1, cardFullWidth, totalOriginalWidth);
+            document.getElementById('nextBtn').onclick = () => manualMove(1, cardFullWidth, totalOriginalWidth);
+        }
+
+        function animate(totalOriginalWidth) {
+            if (!isManual) {
+                currentOffset -= speed;
+                if (Math.abs(currentOffset) >= totalOriginalWidth * 2) currentOffset = -totalOriginalWidth;
+                track.style.transform = `translateX(${currentOffset}px)`;
+            }
+            requestAnimationFrame(() => animate(totalOriginalWidth));
+        }
+
+        function manualMove(direction, cardFullWidth, totalOriginalWidth) {
+            isManual = true;
+            track.style.transition = "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
+            currentOffset -= (direction * cardFullWidth);
+            if (Math.abs(currentOffset) >= totalOriginalWidth * 2) currentOffset = -totalOriginalWidth;
+            if (currentOffset > 0) currentOffset = -totalOriginalWidth;
+            track.style.transform = `translateX(${currentOffset}px)`;
+            clearTimeout(window.manualTimer);
+            window.manualTimer = setTimeout(() => {
+                track.style.transition = "none";
+                isManual = false;
+            }, 2500);
+        }
+
+        function openTheater(fileId, title) {
+            window.location.href = `theater_room.html?file_id=${fileId}&title=${encodeURIComponent(title)}`;
+        }
+
+        // 読み込み開始
+        loadMovies();
+    </script>
+</body>
+</html>

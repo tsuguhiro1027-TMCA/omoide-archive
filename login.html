@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思い出アーカイブ | 受付</title>
+    <style>
+        :root {
+            --sepia-dark: #2b231a;
+            --sepia-paper: #f1e4d3;
+            --gold-muted: #c3a168;
+            --black: #12100e;
+        }
+
+        body {
+            background-color: var(--sepia-dark);
+            color: var(--sepia-paper);
+            font-family: 'serif', "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .login-box {
+            width: 350px;
+            padding: 50px 40px;
+            background-color: #5d4037;
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            border: 8px solid #3e2723;
+            border-radius: 5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.5);
+            outline: 2px solid #8d6e63;
+            outline-offset: -15px;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        h1 {
+            background: #f1e4d3;
+            color: #2b231a !important;
+            padding: 10px;
+            font-size: 1.6rem;
+            border: 2px solid #c3a168;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            transform: rotate(-1.5deg);
+            letter-spacing: 0.3em;
+        }
+
+        p {
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            color: #f1e4d3;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            color: var(--gold-muted);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #444;
+            color: var(--sepia-paper);
+            box-sizing: border-box;
+            font-family: serif;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--gold-muted);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--gold-muted);
+            color: var(--black);
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .login-btn:hover {
+            background: var(--sepia-paper);
+            box-shadow: 0 0 15px var(--gold-muted);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .ticket-info {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>受付</h1>
+        <p>お手元のチケットに記載された<br>符号をご入力ください。</p>
+
+        <div class="input-group">
+            <label>家族符号 (ID)</label>
+            <input type="text" id="user-id" placeholder="例：miyagi-1999">
+        </div>
+        <div class="input-group">
+            <label>暗証番号 (Password)</label>
+            <input type="password" id="user-pw" placeholder="••••••••">
+        </div>
+        <button class="login-btn" id="loginBtn" onclick="doLogin()">街角へ入る</button>
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="ticket-info">
+            Digital Heritage Theater<br>
+            思い出アーカイブ事業部
+        </div>
+    </div>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyjhEdmWnWi5QkS-KKY-g-oH6OcktgnFBItjIuIejsJFkvRVjEmpxRm-ui2q5lLz6cPMw/exec';
+
+        async function doLogin() {
+            const userId = document.getElementById('user-id').value.trim();
+            const password = document.getElementById('user-pw').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!userId || !password) {
+                errorMsg.textContent = 'IDとパスワードを入力してください';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '確認中...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch(
+                    `${GAS_URL}?action=login&user_id=${encodeURIComponent(userId)}&password=${encodeURIComponent(password)}`
+                );
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    sessionStorage.setItem('user_id', data.user_id);
+                    sessionStorage.setItem('user_name', data.name);
+                    sessionStorage.setItem('user_plan', data.plan);
+                    sessionStorage.setItem('archive_count', data.archive_count);
+                    window.location.href = 'profile_select.html';
+                } else {
+                    errorMsg.textContent = data.message || 'IDまたはパスワードが違います';
+                    errorMsg.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = '街角へ入る';
+                }
+            } catch (err) {
+                errorMsg.textContent = '通信エラーが発生しました。しばらくしてから再度お試しください。';
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = '街角へ入る';
+            }
+        }
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') doLogin();
+        });
+    </script>
+</body>
+</html>

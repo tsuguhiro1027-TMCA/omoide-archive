@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思い出の時計塔 | 年別アーカイブ</title>
+    <style>
+        :root {
+            --sepia-dark: #1a1510;
+            --sepia-mid: #3d2b1f;
+            --sepia-paper: #f1e4d3;
+            --gold-bright: #e5c185;
+            --gold-muted: #c3a168;
+            --gold-dark: #8c6d31;
+        }
+
+        body {
+            background-color: var(--sepia-dark);
+            background-image: 
+                radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%),
+                url('https://www.transparenttextures.com/patterns/dark-leather.png');
+            color: var(--sepia-paper);
+            font-family: 'serif', "游明朝", serif;
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* 振り子演出 */
+        .pendulum-container {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            z-index: -1; opacity: 0.15; pointer-events: none;
+        }
+        .pendulum-rod {
+            width: 4px; height: 800px; background: linear-gradient(to bottom, var(--gold-dark), var(--gold-bright));
+            margin: 0 auto; transform-origin: top center; animation: swing 4s infinite ease-in-out;
+        }
+        .pendulum-weight {
+            width: 120px; height: 120px; background: radial-gradient(circle at 30% 30%, var(--gold-bright), var(--gold-dark));
+            border-radius: 50%; position: absolute; bottom: 0; left: -58px; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        @keyframes swing { 0% { transform: rotate(15deg); } 50% { transform: rotate(-15deg); } 100% { transform: rotate(15deg); } }
+
+        header { margin: 60px 0; text-align: center; position: relative; }
+
+        .clock-face {
+            width: 160px; height: 160px; border: 4px double var(--gold-muted); border-radius: 50%;
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            position: relative; background: rgba(0,0,0,0.2);
+        }
+        .clock-face::after {
+            content: ''; position: absolute; width: 2px; height: 50px; background: var(--gold-bright);
+            transform-origin: bottom center; top: 30px; animation: rotateHand 60s infinite linear;
+        }
+        @keyframes rotateHand { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        h1 { font-size: 2.4rem; letter-spacing: 0.4em; color: var(--gold-bright); text-shadow: 0 0 15px rgba(229, 193, 133, 0.4); margin: 0; }
+
+        /* タイムライン構造 */
+        .timeline-container { position: relative; width: 90%; max-width: 900px; padding: 40px 0; }
+        .timeline-container::before {
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+            background: linear-gradient(to bottom, transparent, var(--gold-muted), var(--gold-muted), transparent);
+            transform: translateX(-50%); box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .timeline-item {
+            position: relative; width: 50%; padding: 30px 50px; box-sizing: border-box;
+            opacity: 0; transform: scale(0.9) translateY(50px); transition: all 1s ease-out;
+        }
+        .timeline-item.show { opacity: 1; transform: scale(1) translateY(0); }
+        .timeline-item.left { left: 0; text-align: right; }
+        .timeline-item.right { left: 50%; text-align: left; }
+
+        .timeline-item::after {
+            content: '⚙'; position: absolute; color: var(--gold-bright); font-size: 20px;
+            top: 45px; z-index: 2; transition: 0.5s;
+        }
+        .left::after { right: -13px; } .right::after { left: -11px; }
+        .timeline-item.show::after { transform: rotate(360deg); }
+
+        /* --- 年別ブロック（カード） --- */
+        .content-card {
+            background: rgba(30, 24, 18, 0.85);
+            border: 1px solid var(--gold-dark);
+            padding: 25px; border-radius: 8px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+            transition: 0.4s; position: relative;
+            text-align: left; /* リストは常に左揃えで見やすく */
+        }
+        .content-card:hover { border-color: var(--gold-bright); box-shadow: 0 15px 40px rgba(229, 193, 133, 0.2); }
+
+        .year-header {
+            font-size: 2.2rem; font-weight: bold; color: var(--gold-bright);
+            margin-bottom: 15px; border-bottom: 1px dashed var(--gold-dark);
+            padding-bottom: 10px; font-family: 'Times New Roman', serif;
+            letter-spacing: 0.1em;
+        }
+
+        /* 個別のコンテンツリンク */
+        .event-list { display: flex; flex-direction: column; gap: 10px; }
+        
+        .event-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 15px; background: rgba(0,0,0,0.4);
+            border: 1px solid #444; border-radius: 4px;
+            text-decoration: none; color: var(--sepia-paper);
+            transition: 0.2s; cursor: pointer;
+        }
+        .event-item:hover {
+            background: rgba(229, 193, 133, 0.1);
+            border-color: var(--gold-muted);
+            transform: translateX(5px);
+        }
+
+        /* コンテンツの種類を示すアイコンとバッジ */
+        .event-icon {
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .type-movie { background: #3e2723; color: var(--gold-bright); border: 1px solid var(--gold-dark); }
+        .type-photo { background: #1a237e; color: #90caf9; border: 1px solid #3f51b5; }
+        .type-audio { background: #1b5e20; color: #a5d6a7; border: 1px solid #4caf50; }
+
+        .event-title { font-size: 1rem; flex: 1; letter-spacing: 0.05em; }
+
+        .back-link { margin: 60px 0; color: var(--gold-muted); text-decoration: none; border-bottom: 1px solid var(--gold-muted); font-size: 1rem; letter-spacing: 0.2em; transition: 0.3s; }
+        .back-link:hover { color: var(--gold-bright); border-color: var(--gold-bright); }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div class="pendulum-container"><div class="pendulum-rod"><div class="pendulum-weight"></div></div></div>
+
+    <header>
+        <div class="clock-face"><div style="font-size: 0.6rem; color: var(--gold-muted); margin-top: 40px;">ARCHIVE</div></div>
+        <h1>思い出の時計塔</h1>
+        <p style="color: var(--gold-muted); letter-spacing: 0.2em;">〜 刻まれた時間を、紐解く場所 〜</p>
+    </header>
+
+    <div class="timeline-container" id="timeline">
+        </div>
+
+    <a href="index.html" class="back-link">🔙 街角へ戻る</a>
+
+    <script>
+        // ★ 運用を想定したメタデータ（フラットなリスト）
+        const rawMetadata = [
+            { year: "1980", type: "MOVIE", title: "長男 誕生", link: "theater_lobby.html?file=born.mp4" },
+            { year: "1980", type: "PHOTO", title: "お食い初め", link: "photo_album.html" },
+            { year: "1985", type: "AUDIO", title: "家族旅行の車内", link: "radio_room.html" },
+            { year: "1985", type: "MOVIE", title: "幼稚園 お遊戯会", link: "theater_lobby.html?file=play.mp4" },
+            { year: "1985", type: "PHOTO", title: "七五三", link: "photo_album.html" },
+            { year: "1992", type: "PHOTO", title: "小学校 卒業式", link: "photo_album.html" },
+            { year: "2000", type: "MOVIE", title: "成人式", link: "theater_lobby.html?file=adult.mp4" }
+        ];
+
+        // 1. 年ごとにデータをグループ化（集約）する処理
+        const groupedData = rawMetadata.reduce((acc, current) => {
+            if (!acc[current.year]) {
+                acc[current.year] = [];
+            }
+            acc[current.year].push(current);
+            return acc;
+        }, {});
+
+        // 2. 年の昇順（古い順）にソートして配列化
+        const sortedYears = Object.keys(groupedData).sort((a, b) => parseInt(a) - parseInt(b));
+
+        const timeline = document.getElementById('timeline');
+
+        // アイコンとスタイルのマッピング設定
+        const typeConfig = {
+            "MOVIE": { icon: "fas fa-film", class: "type-movie" },
+            "PHOTO": { icon: "fas fa-camera-retro", class: "type-photo" },
+            "AUDIO": { icon: "fas fa-headphones", class: "type-audio" }
+        };
+
+        // 3. HTMLの生成
+        sortedYears.forEach((year, index) => {
+            const side = index % 2 === 0 ? 'left' : 'right';
+            const items = groupedData[year];
+            
+            // その年のコンテンツリストを生成
+            let listHtml = '';
+            items.forEach(item => {
+                const config = typeConfig[item.type];
+                listHtml += `
+                    <a href="${item.link}" class="event-item">
+                        <div class="event-icon ${config.class}"><i class="${config.icon}"></i></div>
+                        <span class="event-title">${item.title}</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #666;"></i>
+                    </a>
+                `;
+            });
+
+            // 年別ブロックの組み立て
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `timeline-item ${side}`;
+            itemDiv.innerHTML = `
+                <div class="content-card">
+                    <div class="year-header">${year}</div>
+                    <div class="event-list">
+                        ${listHtml}
+                    </div>
+                </div>
+            `;
+            timeline.appendChild(itemDiv);
+        });
+
+        // スクロール時のフワッと表示処理
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            observer.observe(item);
+        });
+    </script>
+</body>
+</html>

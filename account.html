@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント設定 | 思い出アーカイブ</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --black: #050505;
+            --gray: #1a1a1a;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            font-family: "游明朝", serif;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+
+        .account-card {
+            width: 500px;
+            background: var(--gray);
+            border: 1px solid var(--gold);
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .account-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 20px;
+        }
+
+        .avatar-large {
+            width: 80px; height: 80px;
+            background: var(--gold);
+            color: var(--black);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .info-group {
+            margin-bottom: 25px;
+        }
+
+        .label {
+            color: var(--gold);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .value {
+            font-size: 1.1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            min-height: 1.5em;
+        }
+
+        .badge-list {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            border: 1px solid var(--gold);
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--gold);
+        }
+
+        .btn-back {
+            display: block;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 12px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: 0.3s;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .btn-back:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        /* ローディング */
+        .loading {
+            text-align: center;
+            color: var(--gold);
+            opacity: 0.7;
+            letter-spacing: 0.2em;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="account-card">
+        <div class="account-header">
+            <div class="avatar-large" id="avatarInitial">…</div>
+            <h2 style="margin:0; letter-spacing: 0.2em;">User Account</h2>
+        </div>
+
+        <div id="accountContent">
+            <div class="loading">読み込み中...</div>
+        </div>
+
+        <a href="index.html" class="btn-back">街角へ戻る</a>
+    </div>
+
+    <script>
+        // ★ここにGASのURLを貼り付けてください★
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyjhEdmWnWi5QkS-KKY-g-oH6OcktgnFBItjIuIejsJFkvRVjEmpxRm-ui2q5lLz6cPMw/exec';
+
+        // ログインチェック
+        const userId = sessionStorage.getItem('user_id');
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        async function loadAccount() {
+            const content = document.getElementById('accountContent');
+            const avatar = document.getElementById('avatarInitial');
+
+            try {
+                const res = await fetch(`${GAS_URL}?action=getAccount&user_id=${encodeURIComponent(userId)}`);
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    // アバターの頭文字を設定
+                    avatar.textContent = data.name ? data.name.charAt(0) : '？';
+
+                    // プランに応じたバッジを生成
+                    const planBadges = {
+                        'プレミアム': ['映画館利用可', '写真館利用可', 'ラジオ局利用可', '時計塔利用可'],
+                        'スタンダード': ['映画館利用可', '写真館利用可'],
+                        'ベーシック': ['映画館利用可']
+                    };
+                    const badges = planBadges[data.plan] || [];
+                    const badgeHtml = badges.map(b => `<span class="badge">${b}</span>`).join('');
+
+                    content.innerHTML = `
+                        <div class="info-group">
+                            <span class="label">氏名</span>
+                            <div class="value">${data.name}</div>
+                        </div>
+                        <div class="info-group">
+                            <span class="label">メールアドレス</span>
+                            <div class="value">${data.email}</div>
+                        </div>
+                        <div class="info-group">
+                            <span class="label">プラン</span>
+                            <div class="value">${data.plan}会員</div>
+                            <div class="badge-list">${badgeHtml}</div>
+                        </div>
+                        <div class="info-group">
+                            <span class="label">保存済みアーカイブ数</span>
+                            <div class="value">${data.archive_count} 本</div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div class="loading">情報の取得に失敗しました</div>';
+                }
+            } catch (err) {
+                content.innerHTML = '<div class="loading">通信エラーが発生しました</div>';
+            }
+        }
+
+        loadAccount();
+    </script>
+</body>
+</html>

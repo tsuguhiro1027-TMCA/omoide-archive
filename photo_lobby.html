@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思い出の写真館 | アルバムの棚</title>
+    <style>
+        :root {
+            --dark-green: #1a241e;
+            --sepia-paper: #f1e4d3;
+            --gold-bright: #e5c185;
+            --shelf-light: #b5835a; 
+            --shelf-main: #8d6e63;
+            --shelf-shadow: #4e342e;
+        }
+
+        body {
+            background-color: var(--dark-green);
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+            color: var(--sepia-paper);
+            font-family: 'serif', "游明朝", serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header { margin-top: 50px; text-align: center; }
+        h1 { font-size: 2.8rem; letter-spacing: 0.4em; color: var(--gold-bright); text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+
+        .shelf-instruction {
+            color: var(--gold-bright);
+            text-align: center;
+            letter-spacing: 0.2em;
+            font-size: 1.1rem;
+            margin-top: 30px;
+        }
+
+        .shelf-wrapper {
+            position: relative;
+            width: 92%;
+            max-width: 1200px;
+            margin-top: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .shelf-container {
+            flex: 1;
+            position: relative;
+            padding: 50px 20px 15px 20px;
+            overflow: hidden; 
+            background: radial-gradient(circle at center, #a1887f 0%, #5d4037 100%);
+            border-radius: 15px 15px 5px 5px;
+            border-bottom: 25px solid #3e2723; 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7), inset 0 0 100px rgba(255,255,255,0.1);
+            border-top: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .shelf-track {
+            display: flex;
+            gap: 35px;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            padding-bottom: 10px;
+        }
+
+        .album-item { 
+            flex: 0 0 calc(25% - 26.5px); 
+            min-width: 180px; 
+            height: 270px; 
+            cursor: pointer; 
+            transition: 0.4s ease-out; 
+            position: relative;
+        }
+
+        .album-cover {
+            width: 100%; height: 100%; background: #5d0000;
+            border-left: 12px solid rgba(0,0,0,0.3);
+            border-radius: 2px 10px 10px 2px; 
+            display: flex; justify-content: center; align-items: center; 
+            padding: 15px; box-sizing: border-box;
+            box-shadow: 10px 15px 25px rgba(0,0,0,0.7);
+        }
+
+        .album-item:nth-child(2) .album-cover { background: #1a3a5a; }
+        .album-item:nth-child(3) .album-cover { background: #2e4a2e; }
+        .album-item:nth-child(4) .album-cover { background: #795548; }
+        .album-item:nth-child(5) .album-cover { background: #4e342e; }
+        .album-item:nth-child(6) .album-cover { background: #4b0082; }
+        .album-item:nth-child(7) .album-cover { background: #2f4f4f; }
+
+        .album-label { 
+            border: 2px solid var(--gold-bright); padding: 12px; text-align: center; 
+            font-size: 0.9rem; color: var(--gold-bright); background: rgba(0,0,0,0.5);
+            line-height: 1.6; backdrop-filter: blur(4px); font-weight: bold; width: 100%;
+        }
+
+        .album-item:hover { transform: translateY(-30px) scale(1.05); z-index: 10; }
+
+        .slide-btn {
+            background: rgba(255,255,255,0.1); border: 2px solid var(--gold-bright);
+            color: var(--gold-bright); font-size: 2.5rem; width: 65px; height: 65px;
+            cursor: pointer; z-index: 100; border-radius: 50%; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; position: absolute;
+        }
+        .slide-btn:hover { background: var(--gold-bright); color: #3e2723; box-shadow: 0 0 20px var(--gold-bright); }
+        .prev-btn { left: -80px; } .next-btn { right: -80px; }
+
+        .back-link { margin: 60px 0; color: var(--gold-bright); text-decoration: none; border: 1px solid var(--gold-bright); padding: 10px 30px; }
+    </style>
+</head>
+<body>
+
+    <header><h1>思い出の写真館</h1></header>
+    <p class="shelf-instruction">手に取りたい思い出のアルバムをお選びください。</p>
+
+    <div class="shelf-wrapper">
+        <button class="slide-btn prev-btn" onclick="moveSlide(-1)">‹</button>
+        <div class="shelf-container">
+            <div class="shelf-track" id="shelfTrack">
+                <div class="album-item" onclick="location.href='photo_album.html?album=album01'">
+                    <div class="album-cover"><div class="album-label"><br>First Roll of Film And New baby</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album02'">
+                    <div class="album-cover"><div class="album-label">YMCA</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album03'">
+                    <div class="album-cover"><div class="album-label">学び舎の記憶</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album04'">
+                    <div class="album-cover"><div class="album-label">人生の節目</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album05'">
+                    <div class="album-cover"><div class="album-label">四季の彩り</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album06'">
+                    <div class="album-cover"><div class="album-label">旅の足跡</div></div>
+                </div>
+                <div class="album-item" onclick="location.href='photo_album.html?album=album07'">
+                    <div class="album-cover"><div class="album-label">仕事と情熱</div></div>
+                </div>
+            </div>
+        </div>
+        <button class="slide-btn next-btn" onclick="moveSlide(1)">›</button>
+    </div>
+
+    <div style="margin-top: 80px;"><a href="index.html" class="back-link">街角へ戻る</a></div>
+
+    <script>
+        let currentPos = 0;
+        const track = document.getElementById('shelfTrack');
+        function moveSlide(direction) {
+            const albumWidth = track.firstElementChild.offsetWidth + 35; 
+            const visibleCount = 4;
+            const totalAlbums = track.children.length;
+            const maxPos = totalAlbums - visibleCount;
+            currentPos += direction;
+            if (currentPos < 0) currentPos = 0;
+            if (currentPos > maxPos) currentPos = maxPos;
+            track.style.transform = `translateX(-${currentPos * albumWidth}px)`;
+        }
+    </script>
+</body>
+</html>

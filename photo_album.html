@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>思い出の写真館 | アルバム表示</title>
+    <style>
+        :root {
+            --album-cover: #4a3222;
+            --album-page: #e0d5c1;
+            --sepia-dark: #2b231a;
+            --gold-muted: #c3a168;
+            --gold-bright: #e5c185;
+            --wine-red: #800000;
+            --chat-room-bg: #d4c8b8;
+            --chat-me-bg: #e5c185;
+        }
+
+        body {
+            background-color: var(--sepia-dark);
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+            color: #333; font-family: 'serif', "游明朝", serif;
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* --- 演出レイヤー --- */
+        #album-opening-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #2b231a 0%, #000 100%); display: flex; justify-content: center; align-items: center; z-index: 9000; perspective: 2000px; transition: opacity 1s ease-in-out; }
+        .book-wrapper { width: 450px; height: 600px; position: relative; transform-style: preserve-3d; transform: rotateX(5deg); }
+        #cover-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-style: preserve-3d; transform-origin: left center; transition: transform 2.2s cubic-bezier(0.645, 0.045, 0.355, 1); z-index: 9005; }
+        #cover-panel.is-open { transform: rotateY(-155deg); }
+        .cover-front-side { position: absolute; width: 100%; height: 100%; background: var(--album-cover); border-radius: 2px 8px 8px 2px; box-shadow: 10px 10px 40px rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; backface-visibility: hidden; z-index: 2; }
+        .cover-back-side { position: absolute; width: 100%; height: 100%; background: var(--album-page); border-radius: 8px 2px 2px 8px; transform: rotateY(180deg); backface-visibility: hidden; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px; box-sizing: border-box; box-shadow: inset 0 0 30px rgba(0,0,0,0.2); z-index: 1; }
+        .book-inside-right { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--album-page); border-radius: 2px 8px 8px 2px; z-index: 9001; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px; box-sizing: border-box; }
+        .mini-photo { background: #fff; padding: 4px 4px 15px 4px; width: 75%; box-shadow: 2px 4px 10px rgba(0,0,0,0.3); transform: rotate(1deg); }
+        .mini-photo img { width: 100%; height: 180px; object-fit: cover; display: block; filter: sepia(0.2); }
+        .cover-title { color: var(--gold-bright); font-size: 1.8rem; letter-spacing: 0.2em; border: 2px solid var(--gold-muted); padding: 15px 25px; text-align: center; background: rgba(0,0,0,0.3); font-weight: bold; width: 80%; }
+        .fade-out { opacity: 0; pointer-events: none; visibility: hidden; }
+
+        /* --- 本編側 --- */
+        #main-content-wrapper { opacity: 0; filter: brightness(0); transition: opacity 2.5s ease-out, filter 3s ease-out; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        #main-content-wrapper.reveal { opacity: 1; filter: brightness(1); }
+        .header-area { text-align: center; margin-top: 30px; width: 100%; }
+        .search-input { background: rgba(0,0,0,0.3); border: 1px solid var(--gold-muted); border-radius: 20px; padding: 10px 20px; color: var(--gold-bright); width: 300px; outline: none; margin-bottom: 10px; font-family: serif; }
+        .slideshow-btn { background: rgba(195, 161, 104, 0.1); border: 2px solid var(--gold-bright); color: var(--gold-bright); padding: 10px 30px; cursor: pointer; border-radius: 25px; font-weight: bold; transition: 0.3s; font-family: serif; }
+
+        .album-container { display: flex; width: 95%; max-width: 1100px; height: 740px; background: var(--album-cover); padding: 20px; border-radius: 5px; position: relative; margin-top: 10px; box-shadow: 0 40px 80px rgba(0,0,0,0.8); }
+        .album-container::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: rgba(0,0,0,0.5); z-index: 5; transform: translateX(-50%); }
+        .page { flex: 1; background: var(--album-page); margin: 0 5px; padding: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; box-shadow: inset 0 0 40px rgba(0,0,0,0.1); }
+
+        .photo-frame { background: #fff; padding: 10px 10px 45px 10px; box-shadow: 5px 8px 20px rgba(0,0,0,0.3); cursor: pointer; transition: 0.4s ease-out; position: relative; width: 85%; max-width: 320px; }
+        .photo-frame img { width: 100%; height: 220px; object-fit: cover; filter: sepia(0.1); display: block; }
+        .photo-title-label { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; font-size: 0.85rem; font-weight: bold; color: #444; }
+
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(195, 161, 104, 0.8); border: none; padding: 40px 15px; cursor: pointer; z-index: 100; font-weight: bold; font-size: 1.2rem; }
+        .prev-btn { left: -70px; } .next-btn { right: -70px; }
+
+        /* --- モーダル --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--album-page); padding: 40px; border-radius: 5px; max-width: 1200px; width: 95%; display: flex; gap: 40px; box-shadow: 0 0 50px rgba(0,0,0,0.8); position: relative; }
+        .modal-left-pane { flex: 1.5; text-align: center; display: flex; flex-direction: column; justify-content: center; position: relative; transition: flex 0.5s ease; }
+        .modal-right-pane { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; max-height: 75vh; transition: flex 0.5s ease; overflow: hidden; }
+        
+        .history-box { margin-bottom: 12px; font-size: 0.9rem; color: #444; background: rgba(255,255,255,0.5); padding: 6px 12px; border-radius: 4px; border-left: 4px solid var(--gold-bright); }
+
+        /* チャットエリア */
+        #commentContainer { display: none; flex-direction: column; min-height: 0; flex: 1; margin-top: 5px; }
+        .comment-list-area {
+            flex: 1; overflow-y: scroll; background: var(--chat-room-bg);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #c4b5a2;
+            border-radius: 8px; padding: 15px; margin-bottom: 10px; max-height: 320px;
+        }
+        .comment-list-area::-webkit-scrollbar { width: 10px; }
+        .comment-list-area::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 5px; }
+        .comment-list-area::-webkit-scrollbar-thumb { background: #8d7b68; border-radius: 5px; border: 2px solid var(--chat-room-bg); }
+
+        .chat-date-header { text-align: center; font-size: 0.7rem; color: #fff; background: rgba(0, 0, 0, 0.2); padding: 3px 10px; border-radius: 12px; margin: 15px auto; width: fit-content; }
+        .comment-item { display: flex; gap: 8px; margin-bottom: 12px; }
+        .comment-content { display: flex; flex-direction: column; max-width: 80%; }
+        .comment-bubble-wrapper { display: flex; align-items: flex-end; gap: 4px; }
+        .comment-time { font-size: 0.65rem; color: #7a736a; white-space: nowrap; margin-bottom: 2px; }
+
+        .comment-item.is-other { flex-direction: row; }
+        .comment-item.is-other .comment-content { align-items: flex-start; }
+        .comment-item.is-other .comment-text { background: #fff; border-radius: 0 12px 12px 12px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+        .comment-item.is-me { flex-direction: row-reverse; }
+        .comment-item.is-me .comment-content { align-items: flex-end; }
+        .comment-item.is-me .comment-bubble-wrapper { flex-direction: row-reverse; }
+        .comment-item.is-me .comment-text { background: var(--chat-me-bg); color: #333; border-radius: 12px 0 12px 12px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; font-size: 1rem; flex-shrink: 0; box-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
+        .avatar-blue { background-color: #4a6b8c; }
+        .avatar-red { background-color: #8c4a4a; }
+        .avatar-orange { background-color: #d4a373; }
+        .avatar-brown { background-color: #a1887f; }
+
+        .comment-user { font-weight: bold; font-size: 0.75rem; color: #555; margin-bottom: 2px; margin-left: 2px; }
+        .comment-text { font-size: 0.9rem; line-height: 1.4; padding: 8px 12px; position: relative; word-break: break-word; }
+
+        .chat-input-wrapper { display: flex; gap: 5px; padding-top: 8px; border-top: 1px dashed #bdae9b; flex-shrink: 0; }
+
+        .btn-group { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; padding-top: 15px; }
+        .btn-base { color: white; border: 2px solid #500; padding: 10px 12px; font-family: '游明朝', serif; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 3px; box-shadow: 2px 2px 0px #300; transition: 0.2s; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+        .download-btn { background-color: var(--wine-red); }
+        .play-video-btn { background-color: #2b231a; border-color: var(--gold-muted); color: var(--gold-bright); box-shadow: 2px 2px 0px #111; }
+        .comment-btn { background-color: #6d4c41; border-color: #3e2723; }
+        .back-btn { background-color: #555; border-color: #333; box-shadow: 2px 2px 0px #222; }
+
+        .btn-base:hover:not(.btn-disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #222; opacity: 0.9; }
+        .btn-disabled { background-color: #888 !important; border-color: #666 !important; color: #ccc !important; box-shadow: none !important; cursor: not-allowed !important; transform: none !important; }
+
+        #slideshow-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; }
+        #slideshow-img { max-width: 85%; max-height: 85%; border: 15px solid #fff; box-shadow: 0 0 50px #000; object-fit: contain; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body onload="initAlbum()">
+
+    <div id="album-opening-overlay">
+        <div class="book-wrapper">
+            <div id="cover-panel">
+                <div class="cover-front-side"><div class="cover-title" id="displayCoverTitle"></div></div>
+                <div class="cover-back-side" id="opening-left-page">
+                    <div class="mini-photo"><img id="dummy-left-1" src=""></div>
+                    <div class="mini-photo"><img id="dummy-left-2" src=""></div>
+                </div>
+            </div>
+            <div class="book-inside-right" id="opening-right-page">
+                <div class="mini-photo"><img id="dummy-right-1" src=""></div>
+                <div class="mini-photo"><img id="dummy-right-2" src=""></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content-wrapper">
+        <header class="header-area">
+            <h1 style="color: var(--gold-bright); letter-spacing: 0.4em; text-shadow: 2px 2px 4px #000;">思 い 出 の 写 真 館</h1>
+            <input type="text" id="searchInput" class="search-input" placeholder="検索..." oninput="handleSearch()">
+            <br>
+            <button class="slideshow-btn" onclick="startSlideshow()">🕯️ 幻灯スライドショーを開始</button>
+        </header>
+        <main class="album-container">
+            <div class="page" id="left-page"></div>
+            <div class="page" id="right-page"></div>
+            <button class="nav-btn prev-btn" onclick="changePage(-1)">‹</button>
+            <button class="nav-btn next-btn" onclick="changePage(1)">›</button>
+        </main>
+        <div id="page-counter" style="margin-top: 20px; color: var(--gold-bright); text-shadow: 1px 1px 2px #000;">記録 1 / 1</div>
+        <a href="photo_lobby.html" style="color: var(--gold-muted); text-decoration: none; border-bottom: 1px solid; margin-top: 20px;">← アルバムの棚へ戻る</a>
+    </div>
+
+    <div id="photoModal" class="modal" onclick="closeDetail()">
+        <div id="modalContent" class="modal-content" onclick="event.stopPropagation()">
+            <div id="modalLeftPane" class="modal-left-pane">
+                <img id="modalImg" src="" style="width: 100%; border: 12px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; max-height: 70vh;">
+                <div id="videoArea" style="display:none; width: 100%;">
+                    <video id="modalVideo" controls style="width:100%; height: auto; border: 8px solid #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.6);"></video>
+                </div>
+            </div>
+            
+            <div id="modalRightPane" class="modal-right-pane">
+                <div id="basicInfoArea">
+                    <h3 id="modalTitle" style="font-size: 1.6rem; margin: 0 0 8px 0; color: var(--sepia-dark); border-bottom: 2px solid var(--gold-muted); padding-bottom: 5px;"></h3>
+                    <div class="history-box">
+                        <strong style="color: #6d4c41; margin-right: 5px;"><i class="far fa-calendar-alt"></i> 撮影記録:</strong>
+                        <span id="modalHistory"></span>
+                    </div>
+                    <div class="modal-theory">
+                        <strong style="color: #6d4c41; font-size: 0.9rem;"><i class="fas fa-book-open"></i> 【解説】</strong>
+                        <p id="modalDesc" style="line-height: 1.5; color: #333; margin-top: 5px; font-size: 0.9rem;"></p>
+                    </div>
+                </div>
+
+                <div id="commentContainer">
+                    <strong style="color: #6d4c41; margin-bottom: 8px; display: block; font-size: 0.85rem;"><i class="fas fa-users"></i> 【家族の会話】</strong>
+                    <div id="commentList" class="comment-list-area"></div>
+                    <div class="chat-input-wrapper">
+                        <input type="text" placeholder="思い出を書き込む..." style="flex: 1; padding: 8px; border: 1px solid #bdae9b; font-family: serif; border-radius: 4px; background: rgba(255,255,255,0.9); font-size: 0.85rem;">
+                        <button style="padding: 5px 12px; font-weight: bold; cursor: pointer; background: #6d4c41; color: white; border: none; border-radius: 4px; font-size: 0.85rem;">送信</button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <a id="downloadBtn" href="" download="" class="btn-base download-btn"><i class="fas fa-image"></i> 保存</a>
+                    <button id="playBtn" class="btn-base play-video-btn" onclick="playMovingPhoto()"><i class="fas fa-film"></i> 動く写真</button>
+                    <button id="commentBtn" class="btn-base comment-btn" onclick="showCommentMode()"><i class="fas fa-comments"></i> コメント</button>
+                    <button id="closeModalBtn" class="btn-base back-btn" onclick="closeDetail()"><i class="fas fa-undo"></i> 戻る</button>
+                    <button id="backBtn" class="btn-base back-btn" style="display:none;" onclick="backToDefault()"><i class="fas fa-undo"></i> 写真に戻る</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const albumID = urlParams.get('album') || 'album01'; 
+        const currentUserId = "user003";
+
+        // --- データ管理（全リスト復旧） ---
+        const albumMaster = {
+            album01: { name: "First Roll of Film And New baby", photos: [{ id: '001.jpg', title: '懐かしの街並み', history: '1965年・駅前通り', video: '001.mp4' },{ id: '002.jpg', title: '家族の食卓', history: '1970年代初頭' },{ id: '003.jpg', title: '思い出3', history: '昭和後期' },{ id: '004.jpg', title: '思い出4' },{ id: '005.jpg', title: '思い出5' }] },
+            album02: { name: "YMCA", photos: [{ id: '001.jpg', title: '家族写真 01' },{ id: '002.jpg', title: '家族写真 02' },{ id: '003.jpg', title: '家族写真 03' },{ id: '004.jpg', title: '家族写真 04' },{ id: '005.jpg', title: '家族写真 05' },{ id: '006.jpg', title: '家族写真 06' }] },
+            album03: { name: "学び舎の記憶", photos: [{ id: '001.jpg', title: '学校の思い出 01' },{ id: '002.jpg', title: '学校の思い出 02' },{ id: '003.jpg', title: '学校の思い出 03' },{ id: '004.jpg', title: '学校の思い出 04' },{ id: '005.jpg', title: '学校の思い出 05' },{ id: '006.jpg', title: '学校の思い出 06' },{ id: '007.jpg', title: '学校の思い出 07' },{ id: '008.jpg', title: '学校の思い出 08' },{ id: '009.jpg', title: '学校の思い出 09' },{ id: '010.jpg', title: '学校の思い出 10' }] }
+        };
+
+        const currentData = albumMaster[albumID] || albumMaster.album01;
+        const allPhotos = currentData.photos;
+        let filteredPhotos = [...allPhotos];
+        let currentPage = 0;
+
+        function initAlbum() {
+            document.getElementById('displayCoverTitle').innerText = currentData.name;
+            const basePath = `assets/${currentUserId}/images/${albumID}/`;
+            if(allPhotos[0]) document.getElementById('dummy-left-1').src = basePath + allPhotos[0].id;
+            if(allPhotos[1]) document.getElementById('dummy-left-2').src = basePath + allPhotos[1].id;
+            if(allPhotos[2]) document.getElementById('dummy-right-1').src = basePath + allPhotos[2].id;
+            if(allPhotos[3]) document.getElementById('dummy-right-2').src = basePath + allPhotos[3].id;
+            displayPhotos(); autoOpening();
+        }
+
+        function autoOpening() {
+            setTimeout(() => { document.getElementById('cover-panel').classList.add('is-open'); }, 800);
+            setTimeout(() => { document.getElementById('album-opening-overlay').classList.add('fade-out'); document.getElementById('main-content-wrapper').classList.add('reveal'); }, 3200);
+        }
+
+        // ★修正：全枚数を正しく表示するロジック
+        function displayPhotos() {
+            const left = document.getElementById('left-page'); const right = document.getElementById('right-page');
+            left.innerHTML = ''; right.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const idx = (currentPage * 4) + i; const p = filteredPhotos[idx];
+                if (p) {
+                    const badge = p.video ? `<button class="moving-photo-badge" onclick="event.stopPropagation(); openDetail(${idx})">▶ 動く写真</button>` : '';
+                    const imgPath = `assets/${currentUserId}/images/${albumID}/${p.id}`;
+                    const html = `<div class="photo-frame" onclick="openDetail(${idx})"><img src="${imgPath}"><div class="photo-title-label">${p.title}</div>${badge}</div>`;
+                    if (i < 2) left.innerHTML += html; else right.innerHTML += html;
+                }
+            }
+            const totalP = Math.ceil(filteredPhotos.length / 4);
+            document.getElementById('page-counter').innerText = `記録 ${currentPage + 1} / ${totalP || 1}`;
+        }
+
+        function changePage(d) { 
+            const totalP = Math.ceil(filteredPhotos.length / 4);
+            currentPage = Math.max(0, Math.min(currentPage + d, totalP - 1)); 
+            displayPhotos(); 
+        }
+        
+        function handleSearch() { const q = document.getElementById('searchInput').value.toLowerCase(); filteredPhotos = allPhotos.filter(p => p.title.toLowerCase().includes(q)); currentPage = 0; displayPhotos(); }
+
+        function openDetail(index) {
+            const p = filteredPhotos[index];
+            const imgPath = `assets/${currentUserId}/images/${albumID}/${p.id}`;
+            backToDefault();
+            document.getElementById('modalImg').src = imgPath;
+            document.getElementById('modalTitle').innerText = p.title;
+            document.getElementById('modalHistory').innerText = p.history || '詳細不明';
+            document.getElementById('modalDesc').innerText = `「${p.title}」の思い出。デジタル化により鮮明に蘇った記録です。`;
+            document.getElementById('downloadBtn').href = imgPath;
+            
+            const playBtn = document.getElementById('playBtn');
+            if(p.video) {
+                playBtn.classList.remove('btn-disabled'); playBtn.onclick = playMovingPhoto;
+                document.getElementById('modalVideo').src = `assets/${currentUserId}/movie/${albumID}/${p.video}`;
+            } else { playBtn.classList.add('btn-disabled'); playBtn.onclick = null; }
+
+            const dummyComments = [
+                { dateHeader: '2026年4月26日 (日)' },
+                { type: 'other', user: '長男', text: 'この時のお父さん、今の僕より若いね！', avatar: 'avatar-blue', icon: 'fa-user', time: '10:30' },
+                { type: 'other', user: '母', text: 'この日の夕食は奮発してすき焼きだったのよ。懐かしいわね。', avatar: 'avatar-red', icon: 'fa-user-circle', time: '10:35' },
+                { type: 'me', text: 'カメラを新調したばかりで嬉しかったのを覚えてるよ。みんな良い笑顔だ。', time: '11:02' },
+                { dateHeader: '2026年4月27日 (月)' },
+                { type: 'other', user: '孫（ひまわり）', text: 'おじいちゃん、かっこいい！✨この服、レトロでかわいい〜！', avatar: 'avatar-orange', icon: 'fa-child', time: '09:15' },
+                { type: 'other', user: '弟（叔父）', text: 'あー、俺もこの日と一緒にいたかったなぁ。仕事で遅くなったんだよな（笑）', avatar: 'avatar-brown', icon: 'fa-user-friends', time: '12:30' },
+                { type: 'me', text: 'そうそう、お前だけ残業で来れなかったんだよな。また今度みんなで行きたいね。', time: '12:45' }
+            ];
+            let commentHTML = '';
+            dummyComments.forEach(c => {
+                if(c.dateHeader) { commentHTML += `<div class="chat-date-header">${c.dateHeader}</div>`; }
+                else {
+                    const alignmentClass = c.type === 'me' ? 'is-me' : 'is-other';
+                    const avatarHTML = c.type === 'other' ? `<div class="comment-avatar ${c.avatar}"><i class="fas ${c.icon}"></i></div>` : '';
+                    const userHTML = c.type === 'other' ? `<div class="comment-user">${c.user}</div>` : '';
+                    commentHTML += `<div class="comment-item ${alignmentClass}">${avatarHTML}<div class="comment-content">${userHTML}<div class="comment-bubble-wrapper"><div class="comment-text">${c.text}</div><div class="comment-time">${c.time}</div></div></div></div>`;
+                }
+            });
+            document.getElementById('commentList').innerHTML = commentHTML;
+            document.getElementById('photoModal').style.display = 'flex';
+        }
+
+        function showCommentMode() {
+            document.getElementById('commentContainer').style.display = 'flex';
+            document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('playBtn').style.display = 'none';
+            document.getElementById('commentBtn').style.display = 'none';
+            document.getElementById('closeModalBtn').style.display = 'none'; 
+            document.getElementById('backBtn').style.display = 'flex'; 
+            const commentList = document.getElementById('commentList');
+            setTimeout(() => { commentList.scrollTop = commentList.scrollHeight; }, 100);
+        }
+
+        function playMovingPhoto() {
+            document.getElementById('modalImg').style.display = 'none';
+            document.getElementById('videoArea').style.display = 'block';
+            document.getElementById('modalLeftPane').style.flex = "2.5";
+            document.getElementById('modalRightPane').style.flex = "0.8";
+            document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('playBtn').style.display = 'none';
+            document.getElementById('commentBtn').style.display = 'none';
+            document.getElementById('closeModalBtn').style.display = 'none'; 
+            document.getElementById('backBtn').style.display = 'flex'; 
+            document.getElementById('modalVideo').play();
+        }
+
+        function backToDefault() {
+            const video = document.getElementById('modalVideo');
+            video.pause(); video.currentTime = 0;
+            document.getElementById('modalImg').style.display = 'block';
+            document.getElementById('videoArea').style.display = 'none';
+            document.getElementById('modalLeftPane').style.flex = "1.5";
+            document.getElementById('modalRightPane').style.flex = "1";
+            document.getElementById('commentContainer').style.display = 'none';
+            document.getElementById('downloadBtn').style.display = 'flex';
+            document.getElementById('playBtn').style.display = 'flex'; 
+            document.getElementById('commentBtn').style.display = 'flex';
+            document.getElementById('closeModalBtn').style.display = 'flex'; 
+            document.getElementById('backBtn').style.display = 'none'; 
+        }
+
+        function closeDetail() { backToDefault(); document.getElementById('photoModal').style.display = 'none'; }
+        
+        let slideTimer;
+        function startSlideshow() { 
+            if(filteredPhotos.length === 0) return;
+            document.getElementById('slideshow-overlay').style.display = 'flex'; let sIdx = 0;
+            const run = () => { document.getElementById('slideshow-img').src = `assets/${currentUserId}/images/${albumID}/${filteredPhotos[sIdx].id}`; sIdx = (sIdx + 1) % filteredPhotos.length; slideTimer = setTimeout(run, 4000); }; run();
+        }
+        function stopSlideshow() { clearTimeout(slideTimer); document.getElementById('slideshow-overlay').style.display = 'none'; }
+    </script>
+</body>
+</html>

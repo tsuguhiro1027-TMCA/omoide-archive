@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時のラジオ局 | 思い出アーカイブ</title>
+    <style>
+        :root {
+            --radio-brown: #3e2723;
+            --gold-bright: #e5c185;
+            --gold-muted: #c3a168;
+            --gold-dark: #8c6d31;
+            --on-air-red: #ff3333;
+            --tube-glow: #ff7b00;
+        }
+
+        body {
+            background-color: #2b1d15;
+            color: var(--gold-bright);
+            font-family: 'serif', "游明朝", serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; overflow: hidden;
+            
+            /* ★ 古い喫茶店の壁紙テクスチャ */
+            background-image: 
+                radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%),
+                url('https://www.transparenttextures.com/patterns/damask.png'); 
+            background-color: #3d2b1f; 
+        }
+
+        /* ライティング演出 */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% -20%, rgba(229, 193, 133, 0.2) 0%, transparent 70%);
+            pointer-events: none; z-index: 1;
+        }
+
+        /* ON AIR ランプ */
+        .on-air {
+            width: 160px; padding: 10px 15px; border: 4px solid #222; background: #111;
+            color: #333; font-weight: bold; text-align: center; margin-bottom: 25px;
+            font-size: 1.4rem; letter-spacing: 0.2em; border-radius: 5px; transition: 0.4s;
+            position: relative; z-index: 10;
+        }
+        .on-air.active { background: var(--on-air-red); color: #fff; animation: blink 2.5s infinite; border-color: #800000; }
+        @keyframes blink { 0%, 100% { opacity: 1; box-shadow: 0 0 30px var(--on-air-red); } 50% { opacity: 0.7; box-shadow: 0 0 10px var(--on-air-red); } }
+
+        /* ラジオ本体 */
+        .radio-body {
+            width: 1050px; height: 560px;
+            background: var(--radio-brown);
+            background-image: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.5)), url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            border-radius: 30px; border: 18px solid #1a100b;
+            display: flex; padding: 35px; box-sizing: border-box; position: relative;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
+            z-index: 10;
+        }
+
+        /* 左側：カセットテープ・ライブラリ */
+        .program-list {
+            width: 320px; background: rgba(0,0,0,0.7); border-radius: 12px;
+            margin-right: 30px; padding: 25px 10px; overflow-y: auto;
+            border: 4px inset #2b1d15; box-shadow: inset 0 0 30px #000;
+            display: flex; flex-direction: column; gap: 25px; align-items: center;
+        }
+
+        .program-list::-webkit-scrollbar { width: 10px; height: 10px; }
+        .program-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 10px; margin: 10px 0;}
+        .program-list::-webkit-scrollbar-thumb { 
+            background: linear-gradient(to right, var(--gold-dark), var(--gold-bright), var(--gold-dark));
+            border-radius: 10px; border: 1px solid #111;
+        }
+
+        /* カセットテープのデザイン */
+        .program-item {
+            width: 270px; height: 170px; background: #1a1a1a;
+            border-radius: 10px; position: relative; cursor: pointer;
+            transition: 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+            flex-shrink: 0; border: 2px solid #333;
+        }
+        .program-item::after {
+            content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 35px;
+            background: #111; border-top: 2px solid #222; border-radius: 5px 5px 0 0;
+        }
+        .cassette-label {
+            position: absolute; top: 15px; left: 15px; right: 15px; height: 100px;
+            background: #e0dcd3; border-radius: 4px; border-top: 18px solid #d32f2f;
+            padding-top: 8px; box-shadow: inset 0 1px 5px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .cassette-title {
+            color: #111; font-size: 1.1rem; font-weight: bold; width: 90%; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #888;
+        }
+        .cassette-window {
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            width: 140px; height: 44px; background: #222; border-radius: 22px; z-index: 1; border: 2px solid #ccc;
+        }
+        .cassette-reels {
+            position: absolute; top: 74px; left: 50%; transform: translateX(-50%);
+            width: 110px; display: flex; justify-content: space-between; z-index: 2; pointer-events: none;
+        }
+        .reel-hole {
+            width: 36px; height: 36px; background: #000; border-radius: 50%; border: 4px solid #ddd;
+            background-image: repeating-conic-gradient(#000 0 30deg, #444 30deg 60deg);
+        }
+
+        .program-item:hover { transform: scale(1.03); z-index: 10; border-color: #555; }
+        .program-item.active { transform: scale(1.05); border: 2px solid var(--gold-bright); box-shadow: 0 0 25px rgba(229, 193, 133, 0.4); }
+
+        /* 中央：スピーカー */
+        .speaker {
+            flex: 1; background: #111; border-radius: 15px; margin-right: 30px;
+            border: 6px solid #1a1a1a; display: flex; flex-direction: column;
+            padding: 30px; box-sizing: border-box; position: relative; overflow: hidden;
+        }
+        .speaker.playing { box-shadow: inset 0 0 80px rgba(255, 123, 0, 0.15); }
+        .visualizer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 6px; opacity: 0; transition: 1s; height: 60px; }
+        .speaker.playing .visualizer { opacity: 0.2; }
+        .bar { width: 12px; background: var(--tube-glow); border-radius: 10px; animation: bounce 0.5s infinite alternate ease-in; }
+        @keyframes bounce { 0% { height: 10px; } 100% { height: 60px; } }
+
+        .broadcast-info { position: relative; z-index: 10; }
+        .broadcast-info h3 { font-size: 1.4rem; margin: 0 0 15px 0; color: var(--gold-bright); border-bottom: 1px dashed #555; padding-bottom: 15px; }
+        .broadcast-info p#audioDesc { font-size: 0.95rem; margin: 0; line-height: 1.8; color: var(--gold-bright); text-shadow: 1px 1px 2px #000; }
+
+        .seek-container { margin-top: auto; width: 100%; z-index: 10; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--gold-bright); }
+        .time-display { font-size: 0.85rem; display: flex; justify-content: space-between; color: var(--gold-dark); margin-top: 10px; font-family: monospace; }
+
+        /* 右側：操作パネル */
+        .dial-panel {
+            width: 200px; background: linear-gradient(to bottom, #d7ccc8, #a1887f);
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+            justify-content: space-between; padding: 25px 10px; border: 4px inset #795548;
+        }
+        .frequency-display { width: 90%; height: 50px; background: #111; color: #ffeb3b; font-family: monospace; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 4px inset #000; text-shadow: 0 0 10px #ffeb3b; }
+        .control-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; padding: 0 10px; }
+        .retro-btn { background: #4e342e; color: var(--gold-bright); border: 2px solid #111; padding: 10px 5px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+        .speed-badge { border: 1px solid #4e342e; padding: 2px 6px; font-size: 0.65rem; border-radius: 4px; cursor: pointer; color: #4e342e; font-weight: bold; }
+        .speed-badge.active { background: #4e342e; color: #d7ccc8; }
+        .volume-wrapper { width: 90%; margin: 10px 0; }
+        .dial { width: 80px; height: 80px; border-radius: 50%; cursor: grab; background: radial-gradient(circle at 30% 30%, #555, #111); border: 6px solid #222; position: relative; margin-top: 5px; }
+        .dial::after { content: ""; position: absolute; top: 8px; left: 50%; width: 4px; height: 15px; background: var(--gold-bright); transform: translateX(-50%); }
+
+        .back-link { position: relative; z-index: 10; margin-top: 30px; color: var(--gold-muted); text-decoration: none; border-bottom: 1px solid; font-size: 0.9rem; }
+
+        /* =========================================
+           ★ モバイル対応（スマホ用レイアウト）
+           ========================================= */
+        @media screen and (max-width: 768px) {
+            body {
+                overflow-y: auto; /* スマホでは縦スクロールできるようにする */
+                overflow-x: hidden;
+                padding: 30px 0;
+                justify-content: flex-start; /* 上詰めにする */
+            }
+            
+            .on-air {
+                width: 120px;
+                font-size: 1.1rem;
+                padding: 8px 10px;
+                margin-bottom: 15px;
+            }
+
+            .radio-body {
+                width: 92%;
+                height: auto;
+                flex-direction: column; /* 縦並びに変更 */
+                padding: 15px;
+                border-width: 8px;
+                border-radius: 20px;
+                gap: 15px;
+            }
+
+            /* カセットリストを「横スクロール」に */
+            .program-list {
+                width: 100%;
+                height: 155px;
+                margin-right: 0;
+                padding: 15px 10px;
+                flex-direction: row; /* 横並び */
+                overflow-x: auto; /* 横スクロール許可 */
+                overflow-y: hidden;
+                box-sizing: border-box;
+                gap: 15px;
+            }
+
+            .program-item {
+                width: 200px;
+                height: 125px;
+            }
+            .cassette-label {
+                height: 75px;
+                padding-top: 5px;
+            }
+            .cassette-title {
+                font-size: 0.9rem;
+            }
+            .cassette-window {
+                top: 50px;
+                width: 100px;
+                height: 35px;
+            }
+            .cassette-reels {
+                top: 54px;
+                width: 80px;
+            }
+            .reel-hole {
+                width: 24px;
+                height: 24px;
+            }
+
+            /* スピーカー */
+            .speaker {
+                width: 100%;
+                margin-right: 0;
+                padding: 20px 15px;
+            }
+            .broadcast-info h3 {
+                font-size: 1.1rem;
+            }
+            .broadcast-info p#audioDesc {
+                font-size: 0.85rem;
+            }
+
+            /* 操作パネル */
+            .dial-panel {
+                width: 100%;
+                flex-direction: row; /* スマホではパネル内の要素を折り返す */
+                flex-wrap: wrap;
+                padding: 15px;
+                justify-content: space-between;
+                gap: 10px;
+                box-sizing: border-box;
+            }
+            .frequency-display {
+                width: 100%;
+                height: 45px;
+                font-size: 1.4rem;
+                margin-bottom: 10px;
+            }
+            .control-btns {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            /* ボリュームとダイヤルを横並びに配置 */
+            .dial-panel > div:nth-child(3), 
+            .dial-panel > div:nth-child(4), 
+            .dial-panel > div:nth-child(5) {
+                width: 48%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .volume-wrapper {
+                width: 100%;
+            }
+            .dial {
+                width: 60px;
+                height: 60px;
+                border-width: 4px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div id="onAirLamp" class="on-air">ON AIR</div>
+
+    <div class="radio-body">
+        <div class="program-list" id="programList"></div>
+
+        <div class="speaker" id="speakerArea">
+            <div class="visualizer">
+                <div class="bar" style="animation-duration: 0.4s"></div>
+                <div class="bar" style="animation-duration: 0.7s"></div>
+                <div class="bar" style="animation-duration: 0.5s"></div>
+                <div class="bar" style="animation-duration: 0.8s"></div>
+            </div>
+            <div class="broadcast-info">
+                <p style="font-size: 0.7rem; color: var(--gold-dark); letter-spacing: 0.2em; margin-bottom: 5px;">▶ NOW BROADCASTING</p>
+                <h3 id="audioTitle">テープを選択してください</h3>
+                <p id="audioDesc">左側のライブラリから思い出のカセットを選択し、ダイヤルを調整して開演してください。</p>
+            </div>
+            <div class="seek-container">
+                <input type="range" id="seekBar" value="0" step="0.1">
+                <div class="time-display">
+                    <span id="currentTime">00:00</span>
+                    <span id="durationTime">00:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dial-panel">
+            <div class="frequency-display" id="freq">88.5</div>
+            <div class="control-btns">
+                <button class="retro-btn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i><br>再生</button>
+                <button class="retro-btn" onclick="downloadAudio()"><i class="fas fa-download"></i><br>保存</button>
+            </div>
+            <div style="width: 100%; text-align: center;">
+                <div style="font-size: 0.6rem; color: #4e342e; font-weight: bold; margin-bottom: 3px;">SPEED</div>
+                <div style="display: flex; gap: 5px; justify-content: center;">
+                    <span class="speed-badge active" onclick="setSpeed(1, this)">1.0x</span>
+                    <span class="speed-badge" onclick="setSpeed(1.5, this)">1.5x</span>
+                    <span class="speed-badge" onclick="setSpeed(2, this)">2.0x</span>
+                </div>
+            </div>
+            <div class="volume-wrapper">
+                <input type="range" id="volumeBar" min="0" max="1" step="0.1" value="1">
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="dial" id="radioDial" onmousedown="startRotate(event)" ontouchstart="startRotateTouch(event)"></div>
+                <p style="color:#4e342e; font-size:0.5rem; font-weight:bold; margin-top:3px;">TUNING</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="index.html" class="back-link">🔙 街角へ戻る</a>
+
+    <audio id="noise" src="https://www.soundjay.com/communication/static-noise-01.mp3" loop></audio>
+    <audio id="voice" src=""></audio>
+
+    <script>
+        const noise = document.getElementById('noise');
+        const voice = document.getElementById('voice');
+        const lamp = document.getElementById('onAirLamp');
+        const speakerArea = document.getElementById('speakerArea');
+        const seekBar = document.getElementById('seekBar');
+        const volumeBar = document.getElementById('volumeBar');
+        const currentTimeText = document.getElementById('currentTime');
+        const durationTimeText = document.getElementById('durationTime');
+        const playIcon = document.getElementById('playIcon');
+
+        const playlist = [
+            { id: 1, title: "祝 島袋哲雄 宮城京子嬢 ご結婚記念", desc: "1966年12月16日", file: "assets/user003/audios/001.mp3" },
+            { id: 2, title: "1982年 正月の挨拶", desc: "親戚が集まった正月の記録。子供たちの元気な声とお年玉の話題。", file: "assets/user003/audios/002.mp3" },
+            { id: 3, title: "思い出 03（未整理）", desc: "ラベルが剥がれかけた古いテープ。中身は何でしょうか？", file: "assets/user003/audios/003.mp3" }
+        ];
+
+        const listContainer = document.getElementById('programList');
+        playlist.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'program-item';
+            itemDiv.id = 'prog-' + index;
+            itemDiv.onclick = () => selectProgram(index);
+            itemDiv.innerHTML = `<div class="cassette-label"><div class="cassette-title">${item.title}</div></div><div class="cassette-window"></div><div class="cassette-reels"><div class="reel-hole"></div><div class="reel-hole"></div></div>`;
+            listContainer.appendChild(itemDiv);
+        });
+
+        function selectProgram(index) {
+            const data = playlist[index];
+            document.querySelectorAll('.program-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('prog-' + index).classList.add('active');
+            voice.src = data.file;
+            document.getElementById('audioTitle').innerText = data.title;
+            document.getElementById('audioDesc').innerText = data.desc;
+            noise.volume = 0.2; noise.play().catch(e=>{});
+            setTimeout(() => { if(!isDragging) noise.pause(); }, 400);
+            voice.play().then(() => updateUI(true)).catch(e => console.log(e));
+        }
+
+        function togglePlay() {
+            if(!voice.src || voice.src.endsWith('radio_room.html')) return;
+            voice.paused ? (voice.play(), updateUI(true)) : (voice.pause(), updateUI(false));
+        }
+
+        function updateUI(playing) {
+            lamp.classList.toggle('active', playing);
+            speakerArea.classList.toggle('playing', playing);
+            playIcon.className = playing ? "fas fa-pause" : "fas fa-play";
+        }
+
+        function downloadAudio() {
+            if(!voice.src || voice.src.endsWith('radio_room.html')) return;
+            const a = document.createElement('a'); a.href = voice.src; a.download = voice.src.split('/').pop(); a.click();
+        }
+
+        function setSpeed(speed, el) {
+            voice.playbackRate = speed;
+            document.querySelectorAll('.speed-badge').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        voice.addEventListener('loadedmetadata', () => { seekBar.max = voice.duration; durationTimeText.innerText = formatTime(voice.duration); });
+        voice.addEventListener('timeupdate', () => { if(!isNaN(voice.duration)) { seekBar.value = voice.currentTime; currentTimeText.innerText = formatTime(voice.currentTime); } });
+        seekBar.addEventListener('input', () => { voice.currentTime = seekBar.value; });
+        volumeBar.addEventListener('input', () => { voice.volume = volumeBar.value; });
+
+        function formatTime(sec) {
+            if (isNaN(sec) || !isFinite(sec)) return "00:00";
+            const m = Math.floor(sec / 60); const s = Math.floor(sec % 60);
+            return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+
+        /* PC用ダイヤル操作 */
+        let isDragging = false;
+        let angle = 0;
+        let lastTouchX = 0;
+
+        function startRotate(e) { isDragging = true; noise.volume = 0.3; noise.play().catch(e=>{}); document.addEventListener('mousemove', rotateDial); document.addEventListener('mouseup', stopRotate); }
+        function rotateDial(e) { if (!isDragging) return; angle += e.movementX; applyRotation(); }
+        function stopRotate() { isDragging = false; noise.pause(); document.removeEventListener('mousemove', rotateDial); }
+
+        /* スマホ用ダイヤル操作（スワイプ対応） */
+        function startRotateTouch(e) {
+            isDragging = true;
+            noise.volume = 0.3; noise.play().catch(e=>{});
+            lastTouchX = e.touches[0].clientX;
+            document.addEventListener('touchmove', rotateDialTouch, {passive: false});
+            document.addEventListener('touchend', stopRotateTouch);
+        }
+        function rotateDialTouch(e) {
+            if (!isDragging) return;
+            e.preventDefault(); /* 画面のスクロールを防ぐ */
+            let currentX = e.touches[0].clientX;
+            angle += (currentX - lastTouchX) * 1.5;
+            lastTouchX = currentX;
+            applyRotation();
+        }
+        function stopRotateTouch() {
+            isDragging = false; noise.pause();
+            document.removeEventListener('touchmove', rotateDialTouch);
+            document.removeEventListener('touchend', stopRotateTouch);
+        }
+
+        function applyRotation() {
+            document.getElementById('radioDial').style.transform = `rotate(${angle}deg)`;
+            document.getElementById('freq').innerText = (76 + (Math.abs(angle) % 150) / 5).toFixed(1);
+        }
+
+        voice.onended = () => updateUI(false);
+    </script>
+</body>
+</html>
