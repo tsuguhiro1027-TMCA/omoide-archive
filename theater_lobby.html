@@ -218,24 +218,24 @@
                     track.innerHTML = '';
 
                     // ポスターカードを生成
-                    movies.forEach(movie => {
-                        const thumbnailUrl = movie.thumbnail_id
-                            ? getDriveImageUrl(movie.thumbnail_id)
-                            : 'https://via.placeholder.com/380x500/111/d4af37?text=No+Image';
+movies.forEach(movie => {
+    const thumbnailUrl = movie.thumbnail_id
+        ? getDriveImageUrl(movie.thumbnail_id)
+        : 'https://via.placeholder.com/380x500/111/d4af37?text=No+Image';
 
-                        const card = document.createElement('div');
-                        card.className = 'poster-card';
-                        card.onclick = () => openTheater(movie.file_id, movie.title);
-                        card.innerHTML = `
-                            <div class="now-showing-badge">NOW SHOWING</div>
-                            <div class="poster-image">
-                                <img src="${thumbnailUrl}"
-                                     onerror="this.src='https://via.placeholder.com/380x500/111/d4af37?text=No+Image'">
-                            </div>
-                            <div class="poster-title">${movie.title}</div>
-                        `;
-                        track.appendChild(card);
-                    });
+    const card = document.createElement('a');
+    card.className = 'poster-card';
+    card.href = `theater_room.html?file_id=${movie.file_id}&title=${encodeURIComponent(movie.title)}`;
+    card.innerHTML = `
+        <div class="now-showing-badge">NOW SHOWING</div>
+        <div class="poster-image">
+            <img src="${thumbnailUrl}"
+                 onerror="this.src='https://via.placeholder.com/380x500/111/d4af37?text=No+Image'">
+        </div>
+        <div class="poster-title">${movie.title}</div>
+    `;
+    track.appendChild(card);
+});
 
                     // カードが少ない場合はループ用にクローンを追加
                     const originalCards = Array.from(track.children);

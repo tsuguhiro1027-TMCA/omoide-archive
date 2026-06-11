@@ -9,7 +9,6 @@
             --gold-bright: #e5c185;
             --gold-muted: #c3a168;
             --gold-dark: #8c6d31;
-            --theater-red: #4d0000;
         }
 
         body {
@@ -20,14 +19,11 @@
             cursor: default;
         }
 
-        /* 入場扉（VIPシアター仕様） */
         #doorOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; display: flex; align-items: center; justify-content: center;
-            overflow: hidden; pointer-events: auto;
-            perspective: 1000px;
+            overflow: hidden; pointer-events: auto; perspective: 1000px;
         }
-
         .door-half {
             position: absolute; top: 0; width: 50%; height: 100%;
             background: radial-gradient(circle at center, #5a0000 0%, #2a0000 100%);
@@ -37,31 +33,24 @@
             display: flex; justify-content: center; align-items: center;
             backface-visibility: hidden;
         }
-        
         .door-half::after {
             content: ''; position: absolute;
             top: 10%; bottom: 10%; left: 15%; right: 15%;
-            border: 2px solid var(--gold-dark);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            opacity: 0.5;
+            border: 2px solid var(--gold-dark); opacity: 0.5;
         }
-
         .door-left { left: 0; transform-origin: left center; border-right: 3px solid #000; }
         .door-right { right: 0; transform-origin: right center; border-left: 3px solid #000; }
-        
         .door-handle {
             position: absolute; top: 50%; width: 25px; height: 160px;
             background: linear-gradient(to right, var(--gold-bright), var(--gold-dark), var(--gold-bright));
             border-radius: 5px; box-shadow: 5px 5px 20px rgba(0,0,0,0.8);
-            transform: translateY(-50%);
-            z-index: 10;
+            transform: translateY(-50%); z-index: 10;
         }
         .door-left .door-handle { right: 20px; }
         .door-right .door-handle { left: 20px; }
-
         .entrance-box {
             position: relative; z-index: 10000; text-align: center;
-            background: rgba(0, 0, 0, 0.9); padding: 50px 70px; border-radius: 2px;
+            background: rgba(0,0,0,0.9); padding: 50px 70px; border-radius: 2px;
             border: 3px double var(--gold-dark); box-shadow: 0 0 50px rgba(0,0,0,1);
             transition: opacity 0.8s ease;
         }
@@ -71,51 +60,43 @@
             padding: 18px 50px; font-size: 1.6rem; cursor: pointer; font-family: serif;
             letter-spacing: 0.4em; transition: 0.4s;
         }
-        .enter-btn:hover { background: var(--gold-bright); color: #000; box-shadow: 0 0 30px var(--gold-dark); }
-
+        .enter-btn:hover { background: var(--gold-bright); color: #000; }
         #doorOverlay.is-open .door-left { transform: translateZ(200px) rotateY(-95deg); }
         #doorOverlay.is-open .door-right { transform: translateZ(200px) rotateY(95deg); }
         #doorOverlay.is-open .entrance-box { opacity: 0; pointer-events: none; }
         #doorOverlay.is-hidden { pointer-events: none; }
 
-
-        /* シアター内部 */
         .theater-architecture {
             position: relative; width: 100%; flex: 1; perspective: 2000px;
             display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;
         }
-
-        .reveal-ui {
-            opacity: 0;
-            transition: opacity 0.6s ease;
-        }
+        .reveal-ui { opacity: 0; transition: opacity 0.6s ease; }
         .is-visible { opacity: 1; }
-
         .title-area { position: absolute; top: 6%; z-index: 35; }
-        h1 { font-size: 1.1rem; margin: 0; letter-spacing: 0.3em; color: var(--gold-bright); text-shadow: 0 0 10px rgba(229, 193, 133, 0.5); opacity: 0.6; }
+        h1 { font-size: 1.1rem; margin: 0; letter-spacing: 0.3em; color: var(--gold-bright); opacity: 0.6; }
 
-        .screen-container { 
+        .screen-container {
             position: relative; width: 75%; max-width: 950px; z-index: 10;
             transform: rotateX(5deg); box-shadow: 0 30px 100px rgba(0,0,0,1);
             border-radius: 5px; overflow: hidden; border: 4px solid #111; background: #000;
-            transition: all 0.5s ease; /* 切り替えをスムーズに */
         }
-        video { width: 100%; display: block; aspect-ratio: 16 / 9; }
+        .screen-container iframe {
+            width: 100%; aspect-ratio: 16/9; border: none; display: block;
+        }
 
         .control-panel {
             margin-top: 30px; display: flex; flex-direction: column; gap: 15px;
-            z-index: 50; padding: 20px 40px; background: linear-gradient(145deg, #222, #000);
+            z-index: 50; padding: 20px 40px;
+            background: linear-gradient(145deg, #222, #000);
             border: 2px solid var(--gold-dark); border-radius: 15px;
             box-shadow: 0 15px 40px rgba(0,0,0,1); width: 85%; max-width: 850px;
-            transition: all 0.5s ease, opacity 0.6s ease;
+            transition: opacity 0.6s ease;
         }
-        .timeline-wrapper { display: flex; align-items: center; gap: 15px; color: var(--gold-muted); font-size: 0.8rem; }
-        input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--gold-bright); height: 4px; }
-        .button-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-
+        .button-row { display: flex; justify-content: center; align-items: center; gap: 20px; }
         .retro-btn {
             background: transparent; border: none; color: var(--gold-muted);
             cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.3s;
+            text-decoration: none;
         }
         .retro-btn i {
             font-size: 1.2rem; width: 44px; height: 44px;
@@ -123,138 +104,34 @@
             border: 1px solid var(--gold-dark); border-radius: 50%;
             background: #111; color: var(--gold-bright);
         }
-        .retro-btn span { font-size: 0.65rem; font-weight: bold; }
+        .retro-btn span { font-size: 0.65rem; font-weight: bold; color: var(--gold-muted); }
         .retro-btn:hover { color: var(--gold-bright); transform: translateY(-2px); }
 
-        .extra-controls { display: flex; align-items: center; gap: 15px; border-left: 1px solid var(--gold-dark); padding-left: 15px; }
-        .speed-badge { border: 1px solid var(--gold-dark); padding: 2px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; color: var(--gold-bright); }
-        .speed-badge.active { background: var(--gold-dark); color: #000; }
-        .volume-wrapper { display: flex; align-items: center; gap: 8px; color: var(--gold-muted); }
-
-
-        /* =========================================
-           ★ 全画面（フルスクリーン）モード専用スタイル
-           ========================================= */
-        body.is-fullscreen .theater-architecture {
-            perspective: none; /* 3D空間を解除 */
-        }
-        
-        /* 映像コンテナを画面いっぱいに広げる */
         body.is-fullscreen .screen-container {
-            width: 100vw;
-            max-width: 100vw;
-            height: 100vh;
-            transform: none; /* スクリーンの傾きを解除 */
-            border: none;
-            border-radius: 0;
-            box-shadow: none;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100vw; max-width: 100vw; height: 100vh;
+            transform: none; border: none; border-radius: 0; box-shadow: none;
         }
-        
-        body.is-fullscreen video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* 映像の比率を保ったまま最大化 */
+        body.is-fullscreen .screen-container iframe {
+            width: 100%; height: 100%; aspect-ratio: unset;
         }
-
-        /* パネルを映像の下部に浮かせる（半透明にして被せる） */
         body.is-fullscreen .control-panel {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 950px;
-            background: rgba(15, 15, 15, 0.7); /* 少し透けさせる */
-            backdrop-filter: blur(8px); /* 背景をぼかす（モダンな演出） */
-            z-index: 9999;
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 950px;
+            background: rgba(15,15,15,0.7); backdrop-filter: blur(8px); z-index: 9999;
         }
-
-        /* タイトルも上部に浮かせる */
         body.is-fullscreen .title-area {
-            position: fixed;
-            top: 30px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            z-index: 9999;
+            position: fixed; top: 30px; left: 0; width: 100%; z-index: 9999;
         }
 
-        /* =========================================
-           ★ モバイル対応（スマホ用レイアウト）
-           ========================================= */
         @media screen and (max-width: 768px) {
-            /* 入場扉の案内ボックス */
-            .entrance-box {
-                padding: 30px 20px;
-                width: 85%;
-                box-sizing: border-box;
-            }
-            .entrance-title {
-                font-size: 1.1rem;
-                margin-bottom: 20px;
-            }
-            .enter-btn {
-                padding: 12px 30px;
-                font-size: 1.1rem;
-            }
-
-            /* シアター内部 */
-            .title-area {
-                top: 2%;
-            }
-            h1 {
-                font-size: 0.8rem;
-            }
-
-            /* スマホでは画面幅いっぱいに映像を広げる */
-            .screen-container {
-                width: 95%;
-                transform: rotateX(2deg); /* 傾きを少し緩やかにして見やすく */
-            }
-
-            /* コントロールパネルの整列 */
-            .control-panel {
-                width: 95%;
-                padding: 15px;
-                box-sizing: border-box;
-                gap: 10px;
-            }
-
-            /* PCでは横並びのボタン群を、スマホでは縦に積む */
-            .button-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            /* ボタンのサイズを指で押しやすい大きさに微調整 */
-            .retro-btn i {
-                width: 36px;
-                height: 36px;
-                font-size: 1rem;
-            }
-            .retro-btn span {
-                font-size: 0.6rem;
-            }
-
-            /* 音量や速度のコントロールエリアを折り返す */
-            .extra-controls {
-                border-left: none;
-                border-top: 1px solid var(--gold-dark);
-                padding-left: 0;
-                padding-top: 15px;
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap; /* 画面が狭い場合は折り返す */
-            }
-
-            /* 音量バーを少し短く */
-            .volume-wrapper input[type="range"] {
-                width: 50px;
-            }
+            .entrance-box { padding: 30px 20px; width: 85%; box-sizing: border-box; }
+            .entrance-title { font-size: 1.1rem; margin-bottom: 20px; }
+            .enter-btn { padding: 12px 30px; font-size: 1.1rem; }
+            .title-area { top: 2%; }
+            h1 { font-size: 0.8rem; }
+            .screen-container { width: 95%; transform: rotateX(2deg); }
+            .control-panel { width: 95%; padding: 15px; box-sizing: border-box; }
+            .button-row { flex-wrap: wrap; gap: 15px; }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -264,7 +141,6 @@
     <div id="doorOverlay">
         <div class="door-half door-left"><div class="door-handle"></div></div>
         <div class="door-half door-right"><div class="door-handle"></div></div>
-        
         <div class="entrance-box">
             <div class="entrance-title">THEATER ROOM</div>
             <p style="color: var(--gold-muted); font-size: 0.9rem; margin-bottom: 30px; letter-spacing: 0.1em;">
@@ -280,87 +156,75 @@
             <h1>上映作品：<span id="displayTitle">---</span></h1>
         </div>
 
-        <div class="screen-container">
-            <video id="theaterVideo" playsinline poster="https://via.placeholder.com/1100x620/000/d4af37?text=Loading..."></video>
-        </div>
+        <div class="screen-container" id="screenContainer"></div>
 
         <div class="control-panel reveal-ui" id="uiControls">
-            <div class="timeline-wrapper">
-                <span id="currentTime">0:00</span>
-                <input type="range" id="seekBar" value="0" step="0.1">
-                <span id="durationTime">0:00</span>
-            </div>
-
             <div class="button-row">
-                <div style="display: flex; gap: 15px; justify-content: center; width: 100%;">
-                    <button class="retro-btn" onclick="togglePlay()">
-                        <i class="fas fa-pause" id="playIcon"></i>
-                        <span id="playText">一時停止</span>
-                    </button>
-                    <button class="retro-btn" onclick="restartVideo()">
-                        <i class="fas fa-redo"></i>
-                        <span>最初から</span>
-                    </button>
-                    <button class="retro-btn" onclick="downloadVideo()">
-                        <i class="fas fa-file-download"></i>
-                        <span>保存する</span>
-                    </button>
-                </div>
-
-                <div class="extra-controls">
-                    <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
-                        <span style="font-size: 0.6rem; color: var(--gold-muted); font-family: 'serif';">再生速度</span>
-                        <div style="display: flex; gap: 5px;">
-                            <span class="speed-badge active" onclick="setSpeed(1, this)">1.0x</span>
-                            <span class="speed-badge" onclick="setSpeed(1.5, this)">1.5x</span>
-                            <span class="speed-badge" onclick="setSpeed(2, this)">2.0x</span>
-                        </div>
-                    </div>
-                    <div class="volume-wrapper">
-                        <i class="fas fa-volume-up" style="font-size: 0.8rem;"></i>
-                        <input type="range" id="volumeBar" min="0" max="1" step="0.1" value="1" style="width: 70px;">
-                    </div>
-                    
-                    <button class="retro-btn" onclick="toggleFullScreen()" style="min-width: 60px;">
-                        <i class="fas fa-expand" id="fullscreenIcon" style="width: 34px; height: 34px; font-size: 1rem;"></i>
-                        <span id="fullscreenText">全画面</span>
-                    </button>
-
-                    <button class="retro-btn" onclick="location.href='theater_lobby.html'" style="min-width: 60px;">
-                        <i class="fas fa-undo" style="width: 34px; height: 34px; font-size: 1rem;"></i>
-                        <span>ロビーへ戻る</span>
-                    </button>
-                </div>
+                <a class="retro-btn" id="downloadBtn" href="#" download>
+                    <i class="fas fa-file-download"></i>
+                    <span>保存する</span>
+                </a>
+                <button class="retro-btn" onclick="toggleFullScreen()">
+                    <i class="fas fa-expand" id="fullscreenIcon"></i>
+                    <span id="fullscreenText">全画面</span>
+                </button>
+                <button class="retro-btn" onclick="location.href='theater_lobby.html'">
+                    <i class="fas fa-undo"></i>
+                    <span>ロビーへ戻る</span>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        const video = document.getElementById('theaterVideo');
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyjhEdmWnWi5QkS-KKY-g-oH6OcktgnFBItjIuIejsJFkvRVjEmpxRm-ui2q5lLz6cPMw/exec';
+
+        // ログインチェック
+        const userId = sessionStorage.getItem('user_id');
+        if (!userId) window.location.href = 'login.html';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileId = urlParams.get('file_id');
+        const videoTitle = urlParams.get('title') ? decodeURIComponent(urlParams.get('title')) : '思い出の映像';
+
+        document.getElementById('displayTitle').innerText = videoTitle;
+        document.getElementById('doorTitle').innerText = videoTitle;
+        document.title = `${videoTitle} | 思い出の映画館`;
+
+        // iframeで再生 + ダウンロードリンクを設定
+        if (fileId) {
+            document.getElementById('screenContainer').innerHTML = `
+                <iframe src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay" allowfullscreen></iframe>
+            `;
+            // ダウンロードボタンのリンクを設定
+            document.getElementById('downloadBtn').href = 
+                `https://drive.google.com/uc?export=download&id=${fileId}`;
+        }
+
         const doorOverlay = document.getElementById('doorOverlay');
         const uiTitle = document.getElementById('uiTitle');
         const uiControls = document.getElementById('uiControls');
-        const playIcon = document.getElementById('playIcon');
-        const seekBar = document.getElementById('seekBar');
-        const volumeBar = document.getElementById('volumeBar');
-        const currentTimeText = document.getElementById('currentTime');
-        const durationTimeText = document.getElementById('durationTime');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
         const fullscreenText = document.getElementById('fullscreenText');
         const bodyElement = document.body;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoFile = urlParams.get('file');
-        const videoTitle = urlParams.get('title') || "思い出の映像";
-
         let uiTimeout;
-
-        if (videoFile) {
-            video.src = "assets/user003/movies/" + videoFile;
-            document.getElementById('displayTitle').innerText = videoTitle;
-            document.getElementById('doorTitle').innerText = videoTitle;
-            video.load();
+        function showUI() {
+            uiTitle.classList.add('is-visible');
+            uiControls.classList.add('is-visible');
+            bodyElement.style.cursor = 'default';
+            clearTimeout(uiTimeout);
+            uiTimeout = setTimeout(hideUI, 4000);
         }
+        function hideUI() {
+            uiTitle.classList.remove('is-visible');
+            uiControls.classList.remove('is-visible');
+            bodyElement.style.cursor = 'none';
+        }
+
+        document.addEventListener('mousemove', showUI);
+        document.addEventListener('click', showUI);
+        document.addEventListener('touchstart', showUI);
 
         function playBuzzer() {
             try {
@@ -379,125 +243,35 @@
             } catch(e) {}
         }
 
-        function showUI() {
-            uiTitle.classList.add('is-visible');
-            uiControls.classList.add('is-visible');
-            bodyElement.style.cursor = 'default';
-
-            clearTimeout(uiTimeout);
-            if (!video.paused) {
-                uiTimeout = setTimeout(hideUI, 3000);
-            }
-        }
-
-        function hideUI() {
-            if (!video.paused) {
-                uiTitle.classList.remove('is-visible');
-                uiControls.classList.remove('is-visible');
-                bodyElement.style.cursor = 'none';
-            }
-        }
-
-        document.addEventListener('mousemove', showUI);
-        document.addEventListener('click', showUI);
-        document.addEventListener('touchstart', showUI);
-        video.addEventListener('play', showUI);
-        video.addEventListener('pause', showUI);
-
         function enterTheater() {
             playBuzzer();
-            video.play().catch(e => console.log(e));
             doorOverlay.classList.add('is-open');
-
             setTimeout(() => { showUI(); }, 1000);
-            setTimeout(() => { doorOverlay.classList.add('is-hidden'); }, 3000); 
-        }
-
-        function togglePlay() {
-            video.paused ? video.play() : video.pause();
-            playIcon.className = video.paused ? "fas fa-play" : "fas fa-pause";
-            document.getElementById('playText').innerText = video.paused ? "再生" : "一時停止";
-            showUI();
-        }
-
-        function restartVideo() {
-            video.currentTime = 0; video.play();
-            playIcon.className = "fas fa-pause";
-            document.getElementById('playText').innerText = "一時停止";
-            showUI();
-        }
-
-        function downloadVideo() {
-            const link = document.createElement('a');
-            link.href = video.src;
-            link.download = videoFile || "memory_movie.mp4";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            setTimeout(() => { doorOverlay.classList.add('is-hidden'); }, 3000);
         }
 
         function toggleFullScreen() {
             const doc = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (doc.requestFullscreen) {
-                    doc.requestFullscreen();
-                } else if (doc.webkitRequestFullscreen) {
-                    doc.webkitRequestFullscreen();
-                }
+                if (doc.requestFullscreen) doc.requestFullscreen();
+                else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
             }
-            showUI();
         }
 
-        function handleFullscreenChange() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                fullscreenIcon.className = "fas fa-compress";
-                fullscreenText.innerText = "元に戻す";
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenIcon.className = 'fas fa-compress';
+                fullscreenText.innerText = '元に戻す';
                 bodyElement.classList.add('is-fullscreen');
             } else {
-                fullscreenIcon.className = "fas fa-expand";
-                fullscreenText.innerText = "全画面";
+                fullscreenIcon.className = 'fas fa-expand';
+                fullscreenText.innerText = '全画面';
                 bodyElement.classList.remove('is-fullscreen');
             }
-        }
-
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-        function setSpeed(speed, el) {
-            video.playbackRate = speed;
-            document.querySelectorAll('.speed-badge').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        video.addEventListener('timeupdate', () => {
-            if (!isNaN(video.duration)) {
-                seekBar.value = (video.currentTime / video.duration) * 100;
-                currentTimeText.innerText = formatTime(video.currentTime);
-            }
         });
-        video.addEventListener('loadedmetadata', () => {
-            durationTimeText.innerText = formatTime(video.duration);
-        });
-        seekBar.addEventListener('input', () => {
-            video.currentTime = (seekBar.value / 100) * video.duration;
-            showUI();
-        });
-        volumeBar.addEventListener('input', () => { 
-            video.volume = volumeBar.value; 
-            showUI(); 
-        });
-
-        function formatTime(sec) {
-            let m = Math.floor(sec / 60);
-            let s = Math.floor(sec % 60);
-            return `${m}:${s < 10 ? '0' : ''}${s}`;
-        }
     </script>
 </body>
 </html>
